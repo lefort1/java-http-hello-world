@@ -13,12 +13,13 @@ import com.sun.net.httpserver.HttpServer;
 
 public class App {
     public static void main( String[] args ) {
-        new App().run();
+        Integer port = Integer.parseInt( args[0] );
+        new App().run( port );
     }
 
-    public HttpServer run() {
+    public HttpServer run( Integer port ) {
         try {
-            HttpServer server = HttpServer.create( new InetSocketAddress( 8000 ), 0 );
+            HttpServer server = HttpServer.create( new InetSocketAddress( port ), 0 );
             server.createContext( "/hello", new AppHandler() );
             server.start();
             return server;

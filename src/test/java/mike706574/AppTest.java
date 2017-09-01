@@ -15,7 +15,7 @@ import java.net.URL;
 public class AppTest {
     @Test
     public void sayingHello() {
-        App.main( new String[] {} );
+        App.main( new String[] { "8000" } );
         assertEquals( "The server should say hello.",
                       "Hello, world!",
                       slurp( "http://localhost:8000/hello" ) );
