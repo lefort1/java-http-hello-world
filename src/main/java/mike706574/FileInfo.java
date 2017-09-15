@@ -7,9 +7,9 @@ public class FileInfo {
     private final Long size;
     private final LocalDateTime time;
 
-    public FileInfo( String name,
-                     Long size,
-                     LocalDateTime time ) {
+    public FileInfo(String name,
+                    Long size,
+                    LocalDateTime time) {
         this.name = name;
         this.time = time;
         this.size = size;

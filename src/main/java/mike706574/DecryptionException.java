@@ -1,15 +1,15 @@
 package mike706574;
 
 public class DecryptionException extends RuntimeException {
-    public DecryptionException( String msg ) {
-        super( msg );
+    public DecryptionException(String message) {
+        super(message);
     }
 
-    public DecryptionException( Throwable t ) {
-        super( t );
+    public DecryptionException(Throwable cause) {
+        super(cause);
     }
 
-    public DecryptionException( String msg, Throwable t ) {
-        super( msg, t );
+    public DecryptionException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

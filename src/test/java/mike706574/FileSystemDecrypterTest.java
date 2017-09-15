@@ -1,26 +1,24 @@
 package mike706574;
 
-import static org.junit.Assert.assertEquals;
-
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-
 import java.security.Security;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import static org.junit.Assert.assertEquals;
 
 public class FileSystemDecrypterTest {
     @Before
     public void setUp() {
-        new File( "out/" ).mkdir();
+        new File("out/").mkdir();
     }
 
     @After
     public void tearDown() {
-        IO.nukeDirectory( "out/" );
+        IO.nukeDirectory("out/");
     }
 
     @Test
@@ -29,19 +27,19 @@ public class FileSystemDecrypterTest {
         final String secretKeyringPath = "secret/secring.gpg";
         final String passphrase = "NM_BBHi_07-28-2015";
 
-        FileSystemDecrypter decrypter = new FileSystemDecrypter( publicKeyringPath,
-                                                                 secretKeyringPath,
-                                                                 passphrase );
+        FileSystemDecrypter decrypter = new FileSystemDecrypter(publicKeyringPath,
+                secretKeyringPath,
+                passphrase);
 
-        if( Security.getProvider( BouncyCastleProvider.PROVIDER_NAME ) == null ) {
-            Security.addProvider( new BouncyCastleProvider() );
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
         }
 
-        decrypter.decrypt( "in/encrypted.gpg",
-                           "out/decrypted.dat" );
+        decrypter.decrypt("in/encrypted.gpg",
+                "out/decrypted.dat");
 
-        assertEquals( IO.slurp( "expected/decrypted.dat" ),
-                      IO.slurp( "out/decrypted.dat" ) );
+        assertEquals(IO.slurp("expected/decrypted.dat"),
+                IO.slurp("out/decrypted.dat"));
 
     }
 }
