@@ -48,6 +48,11 @@ public class IO {
         dir.delete();
     }
 
+    public static void deleteQuietly(String path) {
+
+        new File(path).delete();
+    }
+
     public static Stream<String> streamLines(String path) {
         try {
             return Files.lines(Paths.get(path));

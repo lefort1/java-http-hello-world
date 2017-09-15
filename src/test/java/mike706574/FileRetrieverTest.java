@@ -15,9 +15,9 @@ import org.mockftpserver.fake.filesystem.WindowsFakeFileSystem;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 public class FileRetrieverTest {
     private static final String USER = "bob";
@@ -65,17 +65,6 @@ public class FileRetrieverTest {
     }
 
     @Test
-    public void downloadFailure() {
-        thrown.expect(FileRetrieverException.class);
-
-        OutputStream os = new ByteArrayOutputStream();
-        new FileRetriever("eakw",
-                "foo",
-                "bar")
-                .download("foo", os);
-    }
-
-    @Test
     public void listFiles() throws Exception {
         List<FileInfo> files = retriever.listFiles("test");
 
@@ -95,8 +84,35 @@ public class FileRetrieverTest {
         OutputStream out = new ByteArrayOutputStream();
         retriever.download("test\\foo.txt",
                 out);
-
         assertEquals("foo.", out.toString());
+    }
+
+    @Test
+    public void downloadNonexistentFile() {
+        OutputStream os = new ByteArrayOutputStream();
+        assertEquals(Optional.empty(), retriever.download("foo", os));
+    }
+
+
+    @Test
+    public void downloadFailure() {
+        thrown.expect(FileRetrieverException.class);
+
+        OutputStream os = new ByteArrayOutputStream();
+        new FileRetriever("eakw", "foo", "bar")
+                .download("foo", os);
+    }
+
+    @Test
+    public void downloadToFile() {
+        String localPath = "local/foo.txt";
+        try {
+            OutputStream out = new ByteArrayOutputStream();
+            assertTrue(retriever.download("test\\foo.txt", localPath));
+            assertEquals("foo.", IO.slurp(localPath));
+        } finally {
+            IO.deleteQuietly(localPath);
+        }
     }
 
     private String password() {

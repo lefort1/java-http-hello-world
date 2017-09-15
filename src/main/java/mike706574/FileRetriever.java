@@ -1,8 +1,6 @@
 package mike706574;
 
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPFileFilter;
 import org.apache.commons.net.ftp.FTPReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class FileRetriever {
@@ -54,7 +49,6 @@ public class FileRetriever {
                 }
                 throw new FileRetrieverException(client.getReplyString());
             }
-            logout(client);
             return Optional.of(is);
         } catch (IOException ex) {
             throw new FileRetrieverException(ex);
@@ -81,7 +75,6 @@ public class FileRetriever {
                                 time);
                     })
                     .collect(Collectors.toList());
-            logout(client);
             return files;
         } catch (IOException ex) {
             throw new FileRetrieverException(ex);
@@ -90,77 +83,70 @@ public class FileRetriever {
         }
     }
 
-    public void download(String path, String destPath) {
-        try (OutputStream os = new FileOutputStream("retrieved.dat")) {
-            download(path, os);
+    public Boolean download(String path, String localPath) {
+        try (OutputStream os = new FileOutputStream(localPath)) {
+            return download(path, os).isPresent();
+
         } catch (IOException ex) {
             throw new FileRetrieverException(ex);
         }
     }
 
-    public void download(String path, OutputStream stream) {
+    public Optional<OutputStream> download(String path, OutputStream stream) {
         FTPClient client = new FTPClient();
         try {
             connect(client);
-            boolean success = client.retrieveFile(path, stream);
-            if (!success) {
-                throw new FileRetrieverException("FTP download failed.");
-            }
-            logout(client);
-        } catch (IOException ex) {
-            throw new FileRetrieverException(ex);
+            return retrieveFile(client, path, stream)
+                    .map(replyString -> stream);
         } finally {
             disconnect(client);
         }
     }
 
-    public List<String> downloadAllLocally(String ftpDir,
-                                           String pattern,
-                                           String localDir) {
+    public Map<String, Boolean> downloadAll(Map<String, OutputStream> targets) {
+        Map<String, Boolean> results = new HashMap<>();
         FTPClient client = new FTPClient();
         try {
             connect(client);
-
-            FTPFileFilter filter = new FTPFileFilter() {
-                @Override
-                public boolean accept(FTPFile ftpFile) {
-                    return ftpFile.getName().contains(pattern);
-                }
-            };
-
-            List<String> names = Arrays.stream(client.listFiles(ftpDir, filter))
-                    .map(file -> file.getName())
-                    .collect(Collectors.toList());
-
-            for (String name : names) {
-                String ftpPath = ftpDir + "/" + name;
-                String localPath = localDir + "/" + name;
-                try (OutputStream stream = new FileOutputStream(localPath)) {
-                    boolean success = client.retrieveFile(ftpPath, stream);
-                    if (!success) {
-                        throw new FileRetrieverException("FTP download failed.");
-                    }
-                }
+            for (Map.Entry<String, OutputStream> target : targets.entrySet()) {
+                String path = target.getKey();
+                OutputStream stream = target.getValue();
+                Boolean successful = retrieveFile(client, path, stream)
+                        .map(replyString -> true)
+                        .orElse(false);
+                results.put(path, successful);
             }
-
-            logout(client);
-            return names;
-        } catch (IOException ex) {
-            throw new FileRetrieverException(ex);
+            return results;
         } finally {
             disconnect(client);
         }
     }
 
-    private void logout(FTPClient client) {
+    private Optional<String> retrieveFile(FTPClient client,
+                                          String path,
+                                          OutputStream stream) {
+        boolean successful;
         try {
-            client.logout();
+            successful = client.retrieveFile(path, stream);
         } catch (IOException ex) {
             throw new FileRetrieverException(ex);
         }
+        if (!successful) {
+            if (client.getReplyCode() == 550) {
+                return Optional.empty();
+            }
+
+            throw new FileRetrieverException(client.getReplyString());
+        }
+        return Optional.of(client.getReplyString());
     }
 
     private void disconnect(FTPClient client) {
+        try {
+            client.logout();
+        } catch (IOException ex) {
+        }
+
         if (client.isConnected()) {
             try {
                 client.disconnect();
