@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TradesMain {
-    private static final Logger log = LoggerFactory.getLogger(TradesMain.class);
+public class PositionsMain {
+    private static final Logger log = LoggerFactory.getLogger(PositionsMain.class);
 
     public static void main(String[] args) {
         ClassPathLogger.trace();

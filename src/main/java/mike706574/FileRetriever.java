@@ -16,6 +16,7 @@ import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FileRetriever {
@@ -42,18 +43,28 @@ public class FileRetriever {
         this.password = password;
     }
 
-    public InputStream stream(String path) {
+    public Optional<InputStream> stream(String path) {
         FTPClient client = new FTPClient();
         try {
             connect(client);
             InputStream is = client.retrieveFileStream(path);
+            if (is == null) {
+                if (client.getReplyCode() == 550) {
+                    return Optional.empty();
+                }
+                throw new FileRetrieverException(client.getReplyString());
+            }
             logout(client);
-            return is;
+            return Optional.of(is);
         } catch (IOException ex) {
             throw new FileRetrieverException(ex);
         } finally {
             disconnect(client);
         }
+    }
+
+    public String slurp(String path) {
+        return IO.slurp(stream(path).orElseThrow(() -> new FileNotFoundException(path)));
     }
 
     public List<FileInfo> listFiles(String path) {

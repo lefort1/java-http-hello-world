@@ -14,10 +14,10 @@ import org.mockftpserver.fake.filesystem.WindowsFakeFileSystem;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class FileRetrieverTest {
     private static final String USER = "bob";
@@ -56,15 +56,20 @@ public class FileRetrieverTest {
     public void stream() {
         OutputStream os = new ByteArrayOutputStream();
         assertEquals("foo.",
-                IO.slurp(retriever.stream("test\\foo.txt")));
+                IO.slurp(retriever.stream("test\\foo.txt").get()));
     }
 
     @Test
-    public void failedDownload() {
+    public void streamFailure() {
+        assertFalse(retriever.stream("elkawrjwa").isPresent());
+    }
+
+    @Test
+    public void downloadFailure() {
         thrown.expect(FileRetrieverException.class);
 
         OutputStream os = new ByteArrayOutputStream();
-        new FileRetriever("foo.bar.baz",
+        new FileRetriever("eakw",
                 "foo",
                 "bar")
                 .download("foo", os);
