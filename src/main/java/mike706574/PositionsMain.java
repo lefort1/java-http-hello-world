@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import fun.mike.frontier.alpha.FileTransferClient;
+import fun.mike.frontier.alpha.FileTransferException;
+
 public class PositionsMain {
     private static final Logger log = LoggerFactory.getLogger(PositionsMain.class);
 
@@ -46,14 +49,19 @@ public class PositionsMain {
         String date = Prop.optional(config, "date").orElse(today());
 
         // Build dependencies
-        FileRetriever fileRetriever = new FileRetriever(url, username, password);
+        FileTransferClient client = new FileTransferClient(url, username, password);
         FileSystemDecrypter decrypter = new FileSystemDecrypter(publicKeyringPath,
                 secretKeyringPath,
                 passphrase);
 
         // Run process
         String path = "INF_SUB_NML_TRADES_T." + date + ""; // TODO
-        fileRetriever.download(path, "encrypted.gpg");
+        try {
+            client.optionalDownload(path, "encrypted.gpg");
+        }
+        catch(FileTransferException ex) {
+            throw new RuntimeException(ex);
+        }
         decrypter.decrypt("encrypted.gpg", "decrypted.dat");
 
         List<List<String>> trades = IO.slurpHeadlessDelimited("decrypted.dat",

@@ -1,16 +1,43 @@
 package mike706574;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class IO {
+    public static void mkdir(String path) {
+        new File(path).mkdir();
+    }
+
+    public static void copy(String srcPath, String destPath) {
+	try (FileInputStream is = new FileInputStream(srcPath);
+             FileChannel ic = is.getChannel();
+             FileOutputStream os = new FileOutputStream(destPath);
+             FileChannel oc = os.getChannel()) {
+            oc.transferFrom(ic, 0, ic.size());
+        }
+        catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
     public static String slurp(String path) {
         try (InputStream is = new URL(path).openConnection().getInputStream()) {
             return slurp(is);
@@ -40,16 +67,17 @@ public class IO {
         }
     }
 
-    public static void nukeDirectory(String path) {
-        File dir = new File(path);
-        for (String filePath : dir.list()) {
-            new File(dir.getPath(), filePath).delete();
+    public static void nuke(String path) {
+        File file = new File(path);
+        if(file.isDirectory()) {
+            for (String filePath : file.list()) {
+                new File(file.getPath(), filePath).delete();
+            }
         }
-        dir.delete();
+        file.delete();
     }
 
     public static void deleteQuietly(String path) {
-
         new File(path).delete();
     }
 
